@@ -22,9 +22,6 @@ class Employ {
   get empAddress() {
     return this._address;
   }
-  get empAge() {
-    return this._age;
-  }
 
   // Setter Methods
   set empName(upName) {
@@ -39,10 +36,6 @@ class Employ {
   set empAddress(upAddress) {
     this._address = upAddress;
   }
-  set empAge(upAge) {
-    this._age = upAge;
-  }
-
 }
 
 function App() {
@@ -52,36 +45,71 @@ function App() {
     new Employ('John', 82000, 'March 13, 1999', 'Mumbai'),
     new Employ('Karl', 44000, 'June 1, 1995', 'Delhi'),
     new Employ('Rose', 76000, 'April 1, 1969', 'Surat'),
-    new Employ('Joye', 23000, 'May 17, 1995', 'Ahmedabad'),
-    new Employ('Chandler', 65000, 'September 13, 1969', 'Mumbai'),
+    new Employ('Joey', 23000, 'May 17, 1995', 'Ahmadabad'),
+    new Employ('Chandler', 73000, 'September 13, 1969', 'Mumbai'),
     new Employ('Rachel', 76000, 'November 13, 1983', 'Surat'),
-    new Employ('Pheobe', 54000, 'September 7, 1971', 'Mumbai'),
+    new Employ('Phoebe', 54000, 'September 7, 1971', 'Mumbai'),
     new Employ('Monica', 23000, 'January 12, 1960', 'Lucknow'),
     new Employ('Mike', 76000, 'September 26, 1997', 'Mumbai'),
     new Employ('Richard', 78000, 'December 13, 1958', 'Delhi'),
-    new Employ('Light', 33000, 'August 22, 2001', 'Ahmedabad'),
-    new Employ('Reuky', 54000, 'September 11, 1990', 'Delhi'),
+    new Employ('Light', 33000, 'August 22, 2001', 'Ahmadabad'),
+    new Employ('Recks', 54000, 'September 11, 1990', 'Delhi'),
     new Employ('Jennifer', 98000, 'August 25, 1978', 'Mumbai'),
     new Employ('Patricia', 58000, 'December 25, 1976', 'Surat'),
   ]
   //console.table(empArr);
 
-  // const empList_age = addAge(empArr)
-  // console.table(empList_age)
+  const empList_age = addAge(empArr)
+  // console.table(empList_age);
+  // console.table(empArr);
 
-  empArr.map(item=>{
-    let empBY = item.empBirthday.getFullYear();
-    item.empAge = currY - empBY;
-    return 0;
+  let dataFromAPIPro = [],dataFromAPIAsync = [];
+  let merDataPro = [] ,merDataAsync = [];
+
+  const apiPromise = new Promise((res, rej) => {
+    let x = false;
+    let data;
+    fetch("https://api.github.com/users")
+      .then((res) => res.json())
+      .then((json) => {
+        x = true;
+        data = json.slice(0, 20);
+        return x;
+      }).then((y) => {
+        if (y) {
+          res(data)
+        } else {
+          rej('Some Error!!!')
+        }
+      })
   })
 
-  console.table(empArr);
+  apiPromise.then((data) => {
+    dataFromAPIPro = data;
+    merDataPro = [...dataFromAPIPro, ...empList_age]
+  }).catch((error) => {
+    console.log(error);
+  })
 
-  const totalSalary = totalSalaryAgeGT30(empArr);
-  //console.log(`Total Salary amount Company need to pay to Employees whose age is Greater than 30 is : ${totalSalary}`);
+  async function apiAsync() {
+    const data = await fetch('https://api.github.com/users').then(res => res.json());
+    dataFromAPIAsync = data.slice(0, 20);
+    merDataAsync = [...dataFromAPIAsync, ...empList_age]
+    console.log(merDataAsync);
+  }
 
-  const sortedEmpList = sortEmpListByAge(empArr);
-  //console.table(sortedEmpList);
+
+  setTimeout(() => {
+    console.log(merDataPro);
+    apiAsync();
+  }, 500)
+
+
+  const totalSalary = totalSalaryAgeGT30(empList_age);
+  console.log(`Total Salary amount for Company for Employee whose age is Greater than 30 is ${totalSalary}`);
+
+  const sortedEmpList = sortEmpListByAge(empList_age);
+  console.table(sortedEmpList);
 
 
   return (
@@ -94,22 +122,25 @@ function App() {
   );
 }
 
-// function addAge(list) {
-//   let currY = new Date().getFullYear();
-//   list.map(item=>{
-//     let empBY = item.empBirthday.getFullYear();
-//     item.age = currY - empBY;
-//     return 0;
-//   })
-//   return list;
-// }
+
+function addAge(list) {
+  let currY = new Date().getFullYear();
+  const arrwithAge = list.map(item => {
+    let empBY = item.empBirthday.getFullYear();
+    let ageObj = { _age: currY - empBY }
+    return Object.assign({}, item, ageObj);
+  })
+  return arrwithAge;
+}
+
+
 
 function totalSalaryAgeGT30(list) {
   let initialVal = 0;
   const totalSalary = list.filter(item => {
-    return item.empAge > 30;
+    return item._age > 30;
   }).reduce((total, item) => {
-    return Number.parseInt(item.empSalary) + total;
+    return Number.parseInt(item._salary) + total;
   }, initialVal)
 
   return totalSalary;
@@ -117,7 +148,7 @@ function totalSalaryAgeGT30(list) {
 
 function sortEmpListByAge(list) {
   const sortedArr = list.sort((a, b) => {
-    return a.empAge - b.empAge;
+    return a._age - b._age;
   })
 
   return sortedArr;
